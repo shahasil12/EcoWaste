@@ -1,0 +1,33 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Citizen Register/Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{% static 'css/citizen_auth.css' %}">
+</head>
+<body>
+<div class="container">
+    <div class="toggle-btns">
+        <button id="loginToggle" class="toggle-btn active">Login</button>
+        <button id="registerToggle" class="toggle-btn">Register</button>
+    </div>
+    <!-- Login Form -->
+    <form id="loginForm" action="{% url 'citizen_login' %}"  class="active" method="POST" autocomplete="off">
+         {% csrf_token %}
+    {{ login_form.as_p }}
+        
+        <button type="submit" class="btn">Login</button>
+    </form>
+    <!-- Register Form -->
+   <form id="registerForm" method="POST" action="{% url 'register_user' %}" autocomplete="off" style="display:none;">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Register</button>
+</form>
+    <div id="message" class="message"></div>
+</div>
+<script src="{% static 'js/citizen_auth.js' %}"></script>
+</body>
+</html>

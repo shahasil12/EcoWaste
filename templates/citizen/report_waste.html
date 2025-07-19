@@ -1,0 +1,257 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Report Waste</title>
+    <!-- Bootstrap & Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <!-- Leaflet & Control Geocoder CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
+    <style>
+        body {
+            background: #f7fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .fade-in { animation: fadeInUp 1.2s both; }
+        @keyframes fadeInUp { 0% { transform: translateY(50px); opacity: 0; } 100% { transform: translateY(0); opacity: 1; } }
+        .card { border-radius: 1.2rem; }
+        #map { border-radius: 1rem; margin-bottom: 8px;}
+        .geolocate-btn { float: right; }
+        .search-control { margin-bottom: .5em; }
+        @media (max-width: 768px) {
+            body { padding: 1em; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg fade-in mt-4">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4 text-success fw-bold">
+                        <i class="bi bi-trash3-fill"></i> Report Waste
+                    </h2>
+                    {% if messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+                    <form method="post" enctype="multipart/form-data" autocomplete="off">
+                        {% csrf_token %}
+                        {# Place field first #}
+                        <div class="mb-3">
+                            {{ waste.place.label_tag }} 
+                            {{ waste.place }}
+                            {% for error in waste.place.errors %}
+                                <div class="text-danger small">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        {# Remaining fields except latitude and longitude #}
+                        {% for field in waste %}
+                          {% if field.name != "place" and field.name != "latitude" and field.name != "longitude" %}
+
+                            <div class="mb-3">
+                                {{ field.label_tag }} 
+                                {{ field }}
+                                {% if field.help_text %}
+                                    <small class="form-text text-muted">{{ field.help_text }}</small>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        {# Map location picker #}
+                        
+                        <div class="mb-4">
+                            <label class="form-label mb-1"><b>Pin Waste Location on Map</b>
+                                <span class="text-muted">(Search, click, or use your current location)</span>
+                            </label>
+                            <button type="button" id="geolocate-btn" class="btn btn-outline-primary btn-sm geolocate-btn mb-2">
+                                <i class="bi bi-geo-alt-fill"></i> Use My Location
+                            </button>
+                            <div id="map" style="height: 260px;"></div>
+                            <!-- Hidden inputs -->
+                            {{ waste.latitude }} {{ waste.longitude }}
+                            <input type="hidden" name="fee" id="id_fee" value="30">
+<input type="hidden" name="nearest_bin_id" id="nearest-bin-id">
+<input type="hidden" name="waive_fee" id="waive-fee" value="0">
+<div id="nearest-bin-show" style="display:none" class="alert alert-info mt-2 p-2 py-2 small"></div>
+
+                            <div class="text-muted small mt-2">
+                                Selected: <span id="latlngDisplay"></span>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100 shadow-sm">
+                            <i class="bi bi-upload"></i> Submit Report
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Leaflet and Geocoder JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
+<script>
+var latInput = document.getElementById('id_latitude');
+var lngInput = document.getElementById('id_longitude');
+var map = L.map('map').setView([20.5937, 78.9629], 5);
+// OSM tiles
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+
+// Add geocoder control (top left by default)
+var geocoder = L.Control.geocoder({
+    defaultMarkGeocode: false
+})
+.on('markgeocode', function(e) {
+    var center = e.geocode.center;
+    map.setView(center, 16);
+    setMarker(center);
+})
+.addTo(map);
+
+var marker;
+function setMarker(latlng) {
+    if (marker) map.removeLayer(marker);
+    marker = L.marker(latlng, {draggable: true}).addTo(map);
+    updateLatLng(latlng.lat, latlng.lng);
+    marker.on('dragend', function(e) {
+        var p = marker.getLatLng();
+        updateLatLng(p.lat, p.lng);
+    });
+}
+
+function updateLatLng(lat, lng) {
+    latInput.value = lat.toFixed(6);
+    lngInput.value = lng.toFixed(6);
+    document.getElementById('latlngDisplay').textContent = lat.toFixed(6) + ", " + lng.toFixed(6);
+}
+
+// Map click sets marker/fields
+map.on('click', function(e) {
+    setMarker(e.latlng);
+});
+
+// "Use My Location" button
+document.getElementById('geolocate-btn').onclick = function() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(pos) {
+            var lat = pos.coords.latitude, lng = pos.coords.longitude;
+            map.setView([lat, lng], 16);
+            setMarker([lat, lng]);
+        }, function(err) {
+            alert("Unable to retrieve your location.");
+        });
+    } else {
+        alert("Geolocation isn't supported by your browser.");
+    }
+};
+
+// If editing (pre-filled lat/lon), show marker
+window.onload = function() {
+    if (latInput.value && lngInput.value) {
+        var lat = parseFloat(latInput.value), lng = parseFloat(lngInput.value);
+        map.setView([lat, lng], 14);
+        setMarker([lat, lng]);
+    }
+};
+
+window.addEventListener('DOMContentLoaded', function() {
+    var feeInput = document.getElementById('id_fee');
+    if(feeInput) {
+        feeInput.value = 30;        // Set value to 30
+        feeInput.readOnly = true;   // Make it non-editable
+        feeInput.classList.add('bg-light'); // Optional: style to show it's disabled
+    }
+});
+const BIN_JSON_URL = "{% url 'bins-json' %}";
+let allBins = [];
+let last_nearest_bin = null;
+
+// Load all bins
+fetch(BIN_JSON_URL).then(resp => resp.json()).then(bins => { allBins = bins; });
+
+// Haversine distance in km
+function getDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371;
+    const dLat = (lat2-lat1) * Math.PI/180;
+    const dLon = (lon2-lon1) * Math.PI/180;
+    const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+    return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function findNearestBin(lat, lng) {
+    if (!allBins.length) return null;
+    let closest=null, dist_min=1e9;
+    allBins.forEach(bin=>{
+        const d = getDistance(lat,lng,bin.latitude,bin.longitude);
+        if (d < dist_min) { dist_min=d; closest=bin; }
+    });
+    return closest;
+}
+
+// Show nearest bin suggestion and allow to set fee = 0
+function showNearestBinOption(lat, lng) {
+    const infoDiv = document.getElementById('nearest-bin-show');
+    const binInput = document.getElementById('nearest-bin-id');
+    let nearest = findNearestBin(lat, lng);
+    last_nearest_bin = nearest;
+    if (nearest) {
+        infoDiv.style.display = '';
+        binInput.value = nearest.id;
+        infoDiv.innerHTML = `
+            <div>
+                Nearest bin: <b>${nearest.name}</b><br>
+                <span class="text-muted">${nearest.address}</span><br>
+                <button type="button" class="btn btn-success btn-sm mt-1" onclick="chooseNearestBin()">I will drop here for zero fee</button>
+            </div>
+        `;
+        document.getElementById('waive-fee').value = 0;  // reset until confirmed
+        document.getElementById('id_fee').value = 30;
+        document.getElementById('id_fee').readOnly = true;
+        document.getElementById('id_fee').classList.remove("bg-success","text-white");
+        document.getElementById('id_fee').classList.add("bg-light");
+    } else {
+        infoDiv.style.display = '';
+        infoDiv.innerHTML = "<span class='text-danger'>No bins found near this location.</span>";
+        binInput.value = "";
+        document.getElementById('waive-fee').value = 0;
+    }
+}
+
+window.chooseNearestBin = function() {
+    document.getElementById('waive-fee').value = 1;
+    document.getElementById('id_fee').value = 0;
+    document.getElementById('id_fee').readOnly = true;
+    document.getElementById('id_fee').classList.remove("bg-light");
+    document.getElementById('id_fee').classList.add("bg-success","text-white");
+    // Replace the suggestion with a confirmation
+    const infoDiv = document.getElementById('nearest-bin-show');
+    infoDiv.innerHTML = `<b>Fee waived!</b> Please drop your waste at <b>${last_nearest_bin.name}</b> (${last_nearest_bin.address}).`;
+}
+
+// Call this in updateLatLng():
+function updateLatLng(lat, lng) {
+    latInput.value = lat.toFixed(6);
+    lngInput.value = lng.toFixed(6);
+    document.getElementById('latlngDisplay').textContent = lat.toFixed(6) + ", " + lng.toFixed(6);
+    showNearestBinOption(lat, lng);
+}
+
+
+
+</script>
+</body>
+</html>

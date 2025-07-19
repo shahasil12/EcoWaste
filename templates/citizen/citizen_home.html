@@ -1,0 +1,105 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Citizen Waste Management Portal</title>
+    <link rel="stylesheet" href="{% static 'css/citizen_home.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        /* (Styles as in your paste above, unchanged) ... */
+        /* ... all the CSS from your paste above ... */
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header class="header">
+        <div class="container" style="display:flex;justify-content:space-between;align-items:center;">
+            <span class="logo">EcoGreen</span>
+            <nav class="nav">
+                <a href="#dashboard" class="nav-link active">Dashboard</a>
+                <a href="{% url 'report_waste' %}" class="nav-link report-btn">Report Waste</a>
+                <a href="{% url 'citizen_report' %}" class="nav-link">Track Reports</a>
+                <a href="{% url 'citizen_profile' %}" class="nav-link">Profile</a>
+                <a href="{% url 'citizen_logout' %}" class="nav-link">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <main class="main">
+        <section id="dashboard" class="section active">
+            <div class="container">
+                <h2>Welcome, {{ citizen.username }}</h2>
+                <!-- Stats summary -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h3>Total Reports</h3>
+                        <span class="stat-number">{{ total_reports }}</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Pending</h3>
+                        <span class="stat-number">{{ pending_reports }}</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Resolved</h3>
+                        <span class="stat-number">{{ resolved_reports }}</span>
+                    </div>
+                    <div class="stat-card">
+                        <h3>Points Earned</h3>
+                        <span class="stat-number">{% if user_points %}{{ user_points }}{% else %}0{% endif %}</span>
+                    </div>
+                </div>
+
+                <!-- Slideshow: Did You Know Facts -->
+                <div class="did-you-know-box">
+                    <h2 class="section-title">Did You Know?</h2>
+                    <div class="slideshow-box">
+                        <p id="fact-text" class="fact">🗑️ An average person produces 4.4 pounds of waste per day.</p>
+                    </div>
+                </div>
+
+                <!-- Recent Reports List -->
+                <div class="recent-reports">
+                    <h3>Recent Reports</h3>
+                    <div class="report-list">
+                        {% for report in recent_reports %}
+                        <div class="report-item">
+                            <span class="report-date">{{ report.created_at|date:"d M Y, H:i" }}</span>
+                            <span class="report-location">{{ report.place }}</span>
+                            <span class="report-status status-{{ report.status|lower|slugify }}">{{ report.status }}</span>
+                        </div>
+                        {% empty %}
+                        <div style="color:#888888;font-style:italic">No recent reports to show.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FACTS SLIDESHOW SCRIPT -->
+    <script>
+        const facts = [
+            "🗑️ An average person produces 4.4 pounds of waste per day.",
+            "♻️ Recycling one aluminum can saves enough energy to run a TV for 3 hours.",
+            "🌍 Over 1.3 billion tons of food is wasted globally every year.",
+            "📦 91% of plastic isn’t recycled — it ends up in landfills or the ocean.",
+            "🌱 Composting reduces household waste by over 30%."
+        ];
+
+        let index = 0;
+        const factText = document.getElementById("fact-text");
+
+        setInterval(() => {
+            index = (index + 1) % facts.length;
+            factText.classList.remove("fact");
+            void factText.offsetWidth; // Re-trigger animation
+            factText.textContent = facts[index];
+            factText.classList.add("fact");
+        }, 4000);
+    </script>
+</body>
+</html>
