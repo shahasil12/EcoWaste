@@ -1,0 +1,180 @@
+Watching for file changes with StatReloader
+Exception in thread django-main-thread:
+Traceback (most recent call last):
+  File "/usr/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+    self.run()
+  File "/usr/lib/python3.10/threading.py", line 953, in run
+    self._target(*self._args, **self._kwargs)
+  File "/home/shahasil/Downloads/ecogreen/venv/lib/python3.10/site-packages/django/utils/autoreload.py", line 64, in wrapper
+    fn(*args, **kwargs)
+  File "/home/shahasil/Downloads/ecogreen/venv/lib/python3.10/site-packages/django/core/management/commands/runserver.py", line 134, in inner_run
+    self.check(**check_kwargs)
+  File "/home/shahasil/Downloads/ecogreen/venv/lib/python3.10/site-packages/django/core/management/base.py", line 573, in check
+    raise SystemCheckError(msg)
+django.core.management.base.SystemCheckError: SystemCheckError: System check identified some issues:
+
+ERRORS:
+waste.Report.image: (fields.E210) Cannot use ImageField because Pillow is not installed.
+	HINT: Get Pillow at https://pypi.org/project/Pillow/ or run command "python -m pip install Pillow".
+
+System check identified 1 issue (0 silenced).
+/home/shahasil/Downloads/ecogreen/waste/models.py changed, reloading.
+Performing system checks...
+
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/forms.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:31:46
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:32:18
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/urls.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:32:30
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/decorators.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:32:54
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/forms.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:34:16
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:34:17
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/urls.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:34:33
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/models.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:34:53
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/admin.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:35:29
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:35:42
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/urls.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:35:59
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/views.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:36:13
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader
+/home/shahasil/Downloads/ecogreen/waste/urls.py changed, reloading.
+Performing system checks...
+
+System check identified no issues (0 silenced).
+March 11, 2026 - 06:36:44
+Django version 5.2.12, using settings 'ecogreen.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CONTROL-C.
+
+WARNING: This is a development server. Do not use it in a production setting. Use a production WSGI or ASGI server instead.
+For more information on production servers see: https://docs.djangoproject.com/en/5.2/howto/deployment/
+Watching for file changes with StatReloader

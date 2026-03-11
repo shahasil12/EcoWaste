@@ -1,0 +1,22 @@
+Collecting django
+  Using cached django-5.2.12-py3-none-any.whl (8.3 MB)
+Collecting python-dotenv
+  Using cached python_dotenv-1.2.2-py3-none-any.whl (22 kB)
+Collecting whitenoise
+  Using cached whitenoise-6.12.0-py3-none-any.whl (20 kB)
+Collecting gunicorn
+  Using cached gunicorn-25.1.0-py3-none-any.whl (197 kB)
+Collecting django-widget-tweaks
+  Using cached django_widget_tweaks-1.5.1-py3-none-any.whl (9.6 kB)
+Collecting sqlparse>=0.3.1
+  Downloading sqlparse-0.5.5-py3-none-any.whl (46 kB)
+     ━━ 4… 5… eta 0:…
+        KB k…        
+Collecting asgiref>=3.8.1
+  Downloading asgiref-3.11.1-py3-none-any.whl (24 kB)
+Collecting packaging
+  Using cached packaging-26.0-py3-none-any.whl (74 kB)
+Collecting typing_extensions>=4
+  Using cached typing_extensions-4.15.0-py3-none-any.whl (44 kB)
+Installing collected packages: whitenoise, typing_extensions, sqlparse, python-dotenv, packaging, gunicorn, asgiref, django, django-widget-tweaks
+Successfully installed asgiref-3.11.1 django-5.2.12 django-widget-tweaks-1.5.1 gunicorn-25.1.0 packaging-26.0 python-dotenv-1.2.2 sqlparse-0.5.5 typing_extensions-4.15.0 whitenoise-6.12.0

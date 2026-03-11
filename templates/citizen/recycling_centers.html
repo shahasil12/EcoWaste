@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recycling Centers | EcoWaste</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        body { background: #f7fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .navbar-brand { font-weight: bold; color: #198754 !important; }
+        .page-header { background: linear-gradient(135deg, #198754, #20c997); color: white; padding: 2.5rem 0; margin-bottom: 2rem; border-radius: 0 0 2rem 2rem; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        #map { height: 600px; width: 100%; border-radius: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.1); border: 4px solid white; }
+        .center-popup { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .center-popup h5 { margin-bottom: 5px; font-weight: bold; color: #198754; }
+        .center-popup p { margin: 0; font-size: 0.9em; color: #555; }
+        .center-popup .waste-types { display: inline-block; background: #e9ecef; color: #495057; padding: 2px 6px; border-radius: 4px; font-size: 0.8em; margin-top: 5px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm py-3">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'citizen_home' %}"><i class="fas fa-recycle me-2"></i>EcoWaste</a>
+            <div class="d-flex align-items-center">
+                <a href="{% url 'citizen_home' %}" class="btn btn-outline-success btn-sm"><i class="fas fa-arrow-left me-1"></i> Back to Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-header text-center">
+        <div class="container">
+            <h1 class="display-6 fw-bold"><i class="fas fa-map-marked-alt me-2"></i>Find Recycling Centers</h1>
+            <p class="lead mb-0">Locate the nearest drop-off points for specific types of waste.</p>
+        </div>
+    </div>
+
+    <div class="container mb-5">
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-0 bg-transparent">
+                    <div class="card-body p-0">
+                        <!-- Map Container -->
+                        <div id="map"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Initialize Map (Center around a default location, e.g., Kerala)
+        var map = L.map('map').setView([10.8505, 76.2711], 7);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Custom Icon for Recycling Centers
+        var recycleIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34],
+            shadowSize: [41, 41]
+        });
+
+        // Fetch Recycling Centers from API
+        fetch('/recycling-centers-json/')
+            .then(response => response.json())
+            .then(data => {
+                data.forEach(center => {
+                    var popupContent = `
+                        <div class="center-popup">
+                            <h5><i class="fas fa-recycle me-1"></i>${center.name}</h5>
+                            <hr class="my-1">
+                            <p><i class="fas fa-map-marker-alt text-danger me-1"></i> ${center.address}</p>
+                            ${center.contact ? `<p><i class="fas fa-phone-alt text-primary me-1 text-sm mt-1"></i> ${center.contact}</p>` : ''}
+                            <div class="waste-types mt-2"><i class="fas fa-check-circle me-1 text-success"></i>Accepts: ${center.accepted_waste_types}</div>
+                        </div>
+                    `;
+
+                    L.marker([center.latitude, center.longitude], {icon: recycleIcon})
+                        .addTo(map)
+                        .bindPopup(popupContent);
+                });
+                
+                // Optional: Adjust map bounds if data exists
+                if(data.length > 0) {
+                    var bounds = L.latLngBounds(data.map(c => [c.latitude, c.longitude]));
+                    map.fitBounds(bounds, {padding: [50, 50]});
+                } else {
+                    // Try to show user's location if no centers
+                    map.locate({setView: true, maxZoom: 14});
+                }
+            })
+            .catch(error => console.error("Error loading recycling centers:", error));
+            
+    </script>
+</body>
+</html>

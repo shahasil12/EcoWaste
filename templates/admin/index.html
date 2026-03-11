@@ -1,0 +1,20 @@
+{% extends "admin/index.html" %}
+
+{% block sidebar %}
+    {{ block.super }}
+    
+    <div class="app-waste module" style="margin-top: 20px;">
+        <table summary="Advanced Analytics Analytics">
+            <caption>
+                <a href="#" class="section" title="Models in the EcoWaste Application">Advanced Analytics</a>
+            </caption>
+            <tbody>
+                <tr class="model-analytics">
+                    <th scope="row"><a href="{% url 'admin_analytics' %}">Platform Analytics Dashboard</a></th>
+                    <td>&nbsp;</td>
+                    <td><a href="{% url 'admin_analytics' %}" class="viewlink">View Dashboard</a></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

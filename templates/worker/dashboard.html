@@ -1,0 +1,157 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Worker Dashboard | EcoWaste</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: #f7fafc; }
+        .sidebar { background: #198754; color: white; min-height: 100vh; padding-top: 2rem; }
+        .sidebar-brand { font-size: 1.5rem; font-weight: bold; margin-bottom: 3rem; padding: 0 1.5rem; display: block; color: white; text-decoration: none; }
+        .nav-link { color: rgba(255,255,255,0.75); padding: 1rem 1.5rem; border-radius: 0; font-weight: 500; transition: 0.2s; }
+        .nav-link:hover, .nav-link.active { color: white; background: rgba(255,255,255,0.1); }
+        .nav-link i { width: 25px; }
+        .main-content { padding: 2rem 3rem; }
+        .pickup-item { background: white; border-radius: 0.8rem; padding: 1.5rem; margin-bottom: 1.2rem; box-shadow: 0 4px 6px rgba(0,0,0,0.04); border-left: 5px solid #e9ecef; }
+        .pickup-item.pending { border-left-color: #ffc107; }
+        .pickup-item.assigned { border-left-color: #0dcaf0; }
+        .pickup-item.completed { border-left-color: #20c997; opacity: 0.7; }
+        .action-btn { border-radius: 2rem; padding: 0.4rem 1.5rem; font-weight: bold; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 px-0 sidebar d-none d-md-block position-fixed">
+                <a href="#" class="sidebar-brand"><i class="fas fa-truck-loading me-2"></i>Worker Panel</a>
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li class="nav-item mt-auto"><a href="{% url 'worker_logout' %}" class="nav-link"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+                <div class="position-absolute bottom-0 w-100 p-3 text-center border-top border-light border-opacity-25 text-white-50 small">
+                    Logged in as <b>{{ worker.username }}</b>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 ms-auto main-content">
+                <div class="d-flex justify-content-between align-items-center mb-5">
+                    <div>
+                        <h2 class="fw-bold text-dark mb-0">Good Day, {{ worker.username }} <i class="fas fa-hand-sparkles text-warning ms-2"></i></h2>
+                        <p class="text-muted mb-0">Here are the waste pickup assignments for your area.</p>
+                    </div>
+                    <div class="bg-white px-4 py-2 rounded-pill shadow-sm text-success fw-bold">
+                        <i class="fas fa-truck me-2"></i>{{ worker.vehicle_number }}
+                    </div>
+                </div>
+
+                <div class="row g-4">
+                    <!-- My Assigned Tasks -->
+                    <div class="col-xl-6">
+                        <div class="d-flex justify-content-between align-items-end mb-3">
+                            <h4 class="fw-bold mb-0 text-dark"><i class="fas fa-clipboard-list text-info me-2"></i>My Tasks</h4>
+                            <span class="badge bg-info text-dark rounded-pill">{{ assigned_pickups.count }} Active</span>
+                        </div>
+                        
+                        {% if not assigned_pickups %}
+                            <div class="text-center py-5 bg-white rounded-3 shadow-sm border border-light h-75 d-flex flex-column justify-content-center">
+                                <i class="far fa-check-circle text-muted mb-3" style="font-size: 3rem;"></i>
+                                <p class="text-muted mb-0">You have no active tasks.<br>Claim a pending pickup from the pool.</p>
+                            </div>
+                        {% endif %}
+                        
+                        {% for pickup in assigned_pickups %}
+                        <div class="pickup-item assigned">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-secondary mb-2">{{ pickup.waste_type }}</span>
+                                <span class="fw-bold text-dark small"><i class="far fa-calendar-alt text-muted me-1"></i>{{ pickup.pickup_date|date:"M d" }}</span>
+                            </div>
+                            <h5 class="fw-bold mb-1">{{ pickup.citizen.username }}</h5>
+                            <p class="text-muted small mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ pickup.address }}</p>
+                            {% if pickup.latitude and pickup.longitude %}
+                            <p class="mb-3">
+                                <a href="https://www.google.com/maps?q={{ pickup.latitude }},{{ pickup.longitude }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">
+                                    <i class="fas fa-map text-info me-1"></i> View on Map
+                                </a>
+                            </p>
+                            {% else %}
+                            <p class="text-muted small mb-3">No exact location provided</p>
+                            {% endif %}
+                            
+                            <form action="{% url 'complete_pickup' pickup.id %}" method="post" class="mt-2">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-outline-success action-btn w-100">
+                                    <i class="fas fa-check me-1"></i> Mark as Completed
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                        
+                        <!-- Recently Completed snippet -->
+                        {% if completed_pickups %}
+                            <h6 class="fw-bold mt-5 text-muted text-uppercase mb-3">Recently Completed</h6>
+                            {% for pickup in completed_pickups|slice:":3" %}
+                                <div class="pickup-item completed py-2 px-3 mb-2 d-flex justify-content-between align-items-center">
+                                    <div><span class="fw-bold small">{{ pickup.citizen.username }}</span> <span class="text-muted ms-2" style="font-size:0.75rem;">{{ pickup.waste_type }}</span></div>
+                                    <i class="fas fa-check-circle text-success"></i>
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+
+                    <!-- Pending Tasks Pool -->
+                    <div class="col-xl-6">
+                        <div class="d-flex justify-content-between align-items-end mb-3">
+                            <h4 class="fw-bold mb-0 text-dark"><i class="fas fa-exclamation-circle text-warning me-2"></i>Available Pool</h4>
+                            <span class="badge bg-warning text-dark rounded-pill">{{ pending_pickups.count }} Pending</span>
+                        </div>
+                        
+                        {% if not pending_pickups %}
+                            <div class="text-center py-5 bg-white rounded-3 shadow-sm border border-light h-75 d-flex flex-column justify-content-center">
+                                <i class="fas fa-leaf text-success mb-3" style="font-size: 3rem;"></i>
+                                <p class="text-muted mb-0">The pool is empty.<br>Great job keeping the city clean!</p>
+                            </div>
+                        {% endif %}
+                        
+                        {% for pickup in pending_pickups %}
+                        <div class="pickup-item pending">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge border border-secondary text-secondary mb-2">{{ pickup.waste_type }}</span>
+                                <span class="fw-bold text-dark small"><i class="far fa-calendar-alt text-muted me-1"></i>{{ pickup.pickup_date|date:"M d" }}</span>
+                            </div>
+                            <h5 class="fw-bold mb-1">{{ pickup.citizen.username }} <a href="tel:{{ pickup.citizen.phone }}" class="text-muted ms-2"><i class="fas fa-phone-alt small"></i></a></h5>
+                            <p class="text-muted small mb-2"><i class="fas fa-map-marker-alt text-danger me-2"></i>{{ pickup.address }}</p>
+                            {% if pickup.latitude and pickup.longitude %}
+                            <p class="mb-3">
+                                <a href="https://www.google.com/maps?q={{ pickup.latitude }},{{ pickup.longitude }}" target="_blank" class="btn btn-sm btn-outline-info rounded-pill">
+                                    <i class="fas fa-map text-info me-1"></i> View on Map
+                                </a>
+                            </p>
+                            {% else %}
+                            <p class="text-muted small mb-3">No exact location provided</p>
+                            {% endif %}
+                            
+                            <form action="{% url 'claim_pickup' pickup.id %}" method="post" class="mt-2 text-end">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-primary action-btn">
+                                    <i class="fas fa-hand-paper me-1"></i> Claim Pickup
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
