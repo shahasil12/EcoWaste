@@ -108,3 +108,5 @@ youtube-dl==2021.12.17
 yt-dlp==2022.4.8
 zeep==4.3.2
 zipp==1.0.0
+Django>=5.0
+django-widget-tweaks

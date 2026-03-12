@@ -227,3 +227,84 @@ body {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+
+/* --- Floating Assistant Widget --- */
+.assistant-widget {
+    position: fixed;
+    bottom: 25px;
+    left: 25px;
+    z-index: 2000;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.assistant-toggle {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(40, 167, 69, 0.4);
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: none;
+}
+
+.assistant-toggle:hover {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.assistant-container {
+    position: absolute;
+    bottom: 80px;
+    left: 0;
+    width: 350px;
+    transform: scale(0);
+    transform-origin: bottom left;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    opacity: 0;
+}
+
+.assistant-container.active {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* --- Premium Bin Cards --- */
+.bin-card-premium {
+    border: none !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease !important;
+    margin-bottom: 15px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.bin-card-premium:hover {
+    transform: translateX(5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+}
+
+.bin-card-premium.border-success { border-left: 5px solid #28a745 !important; }
+.bin-card-premium.border-warning { border-left: 5px solid #ffc107 !important; }
+
+.bin-type-tag {
+    font-size: 0.65rem !important;
+    padding: 0.3em 0.8em !important;
+    border-radius: 20px !important;
+    font-weight: 500 !important;
+}
+
+#faq-chat::-webkit-scrollbar {
+    width: 5px;
+}
+
+#faq-chat::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 10px;
+}

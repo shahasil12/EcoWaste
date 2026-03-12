@@ -56,11 +56,20 @@ class Bin(models.Model):
     latitude = models.FloatField()
     longitude = models.FloatField()
     address = models.CharField(max_length=200)
-    status = models.CharField(max_length=30, choices=[('Available', 'Available'), ('Full', 'Full')])
-    types = models.CharField(max_length=200)  
+    status = models.CharField(max_length=30, choices=[('Available', 'Available'), ('Full', 'Full')], default='Available')
+    types = models.CharField(max_length=200)
+    full_reports_count = models.IntegerField(default=0)
 
     def __str__(self):
         return self.name
+
+class BinReport(models.Model):
+    bin = models.ForeignKey(Bin, on_delete=models.CASCADE, related_name='reports')
+    reported_by = models.ForeignKey(Citizen, on_delete=models.CASCADE)
+    reported_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('bin', 'reported_by')
 
 class Worker(models.Model):
     # Added this now so we can use it in PickupRequest

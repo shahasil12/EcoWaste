@@ -1,7 +1,7 @@
 from django import forms
 from django.core.validators import RegexValidator
 
-from .models import Report
+from .models import Report, Company, PickupRequest
 
 class UserForm(forms.Form):
     username = forms.CharField(max_length=20, widget=forms.TextInput(attrs={'id': 'regUsername'}))
@@ -22,6 +22,14 @@ class Citizen_login(forms.Form):
 
 
 class ReportForm(forms.ModelForm):
+    assigned_company = forms.ModelChoiceField(
+        queryset=Company.objects.all(),
+        required=False,
+        empty_label="-- Select Company (Optional) --",
+        label="Assign to Company",
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
     class Meta:
         model = Report
         fields = [
@@ -31,6 +39,7 @@ class ReportForm(forms.ModelForm):
             'waste_type',
             'fee',
             'image',
+            'assigned_company',
         ]
         widgets = {
             'latitude': forms.HiddenInput(),

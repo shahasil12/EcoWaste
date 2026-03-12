@@ -11,10 +11,28 @@ from django.shortcuts import  get_object_or_404
 import random
 from django.core.mail import send_mail
 from django.http import JsonResponse
-from .models import Bin
+from .models import Bin, BinReport
 
 def home(request):
-    return render(request,'index.html')
+    top_citizens = Citizen.objects.order_by('-points')[:5]
+    total_bins = Bin.objects.count()
+    full_bins = Bin.objects.filter(status='Full').count()
+    available_bins = Bin.objects.filter(status='Available').count()
+    total_resolved = Report.objects.filter(status='Resolved').count()
+    # Mock conversions: Let's assume on average each resolved report handles 5kg of waste
+    # and 50kg corresponds to roughly 1 tree saved (just for gamification stats)
+    waste_collected_kg = total_resolved * 5
+    trees_saved = waste_collected_kg // 50
+
+    return render(request, 'index.html', {
+        'top_citizens': top_citizens,
+        'total_bins': total_bins,
+        'full_bins': full_bins,
+        'available_bins': available_bins,
+        'total_resolved': total_resolved,
+        'waste_collected_kg': waste_collected_kg,
+        'trees_saved': trees_saved
+    })
 
 def citizen(request):
     login_form = Citizen_login()
@@ -137,6 +155,44 @@ def citizen_login(request):
     })
 
 
+@citizen_required
+def citizen_map(request):
+    citizen_id = request.session.get('citizen_id')
+    citizen = get_object_or_404(Citizen, id=citizen_id)
+    return render(request, 'citizen/map.html', {'citizen': citizen})
+
+WASTE_GUIDES = {
+    'pizza box': {'category': 'General', 'description': 'Greasy pizza boxes cannot be recycled and should go to general waste.'},
+    'battery': {'category': 'E-waste', 'description': 'Batteries contain hazardous materials. Drop them off at specific E-waste recycling centers.'},
+    'plastic bottle': {'category': 'Plastic', 'description': 'Empty and rinse plastic bottles before putting them in the plastic recycling bin.'},
+    'glass bottle': {'category': 'Glass', 'description': 'Rinse glass bottles. Labels do not need to be removed.'},
+    'apple core': {'category': 'Organic', 'description': 'Perfect for composting or the organic waste bin.'},
+    'cardboard': {'category': 'General', 'description': 'Clean, dry cardboard can be recycled. Break down boxes before disposal.'},
+    'smartphone': {'category': 'E-waste', 'description': 'Smartphones need specialized E-waste recycling to recover precious metals safely.'},
+    'aluminum can': {'category': 'Metal', 'description': 'Rinse lightly and crush to save space in the Metal bin.'},
+}
+
+def waste_sorting_api(request):
+    query = request.GET.get('q', '').lower()
+    results = []
+    if query:
+        for item, details in WASTE_GUIDES.items():
+            if query in item:
+                results.append({
+                    'item': item.title(),
+                    'category': details['category'],
+                    'description': details['description']
+                })
+    return JsonResponse({'results': results})
+
+@citizen_required
+def citizen_rewards(request):
+    citizen_id = request.session.get('citizen_id')
+    citizen = get_object_or_404(Citizen, id=citizen_id)
+    top_citizens = Citizen.objects.order_by('-points')[:10]
+    return render(request, 'citizen/rewards.html', {'citizen': citizen, 'top_citizens': top_citizens})
+
+
 from django.contrib import messages
 from django.shortcuts import render, redirect
 from .forms import ReportForm
@@ -166,9 +222,11 @@ def report_waste(request):
     return render(request, 'citizen/report_waste.html', {'waste': waste})
 
 
+@citizen_required
 def citizen_report(request):
-    citizen = Citizen.objects.filter(id=request.user.id).first()
-    reports = Report.objects.filter(reported_by=citizen.id) if citizen else []
+    citizen_id = request.session.get('citizen_id')
+    citizen = Citizen.objects.filter(id=citizen_id).first()
+    reports = Report.objects.filter(reported_by=citizen) if citizen else []
     return render(request, 'citizen/citizen_reports.html', {'reports': reports, 'citizen': citizen})
 
 
@@ -334,6 +392,38 @@ def bins_json(request):
     bins = list(Bin.objects.values('name', 'latitude', 'longitude', 'address', 'status', 'types'))
     return JsonResponse(bins, safe=False)
 
+@citizen_required
+def report_bin_full(request, bin_id):
+    if request.method == 'POST':
+        bin_obj = get_object_or_404(Bin, id=bin_id)
+        citizen_id = request.session.get('citizen_id')
+        citizen = get_object_or_404(Citizen, id=citizen_id)
+
+        # Check if already reported
+        if BinReport.objects.filter(bin=bin_obj, reported_by=citizen).exists():
+            return JsonResponse({'status': 'error', 'message': 'You have already reported this bin.'}, status=400)
+
+        # Create report
+        BinReport.objects.create(bin=bin_obj, reported_by=citizen)
+        
+        # Update bin count
+        bin_obj.full_reports_count += 1
+        
+        # Automatic status update threshold (3 reports)
+        if bin_obj.full_reports_count >= 3:
+            bin_obj.status = 'Full'
+        
+        bin_obj.save()
+        
+        return JsonResponse({
+            'status': 'success', 
+            'message': 'Report submitted! Thank you for helping.',
+            'reports_count': bin_obj.full_reports_count,
+            'bin_status': bin_obj.status
+        })
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'}, status=400)
+
+
 
 from .forms import PickupRequestForm
 from .models import PickupRequest
@@ -396,13 +486,21 @@ def worker_logout(request):
 def worker_dashboard(request):
     worker = Worker.objects.get(id=request.session.get('worker_id'))
     pending_pickups = PickupRequest.objects.filter(status='Pending').order_by('pickup_date')
-    assigned_pickups = PickupRequest.objects.filter(assigned_worker=worker, status='Assigned').order_by('pickup_date')
+    
+    # Simple Route Optimization: Sort assigned pickups by latitude (North to South) as a heuristic
+    assigned_pickups_qs = PickupRequest.objects.filter(assigned_worker=worker, status='Assigned').order_by('pickup_date')
+    
+    # Attempt to sort them spatially if they have coordinates
+    assigned_pickups_list = list(assigned_pickups_qs)
+    # Give items without lat/lng a default high value to put them at the end
+    assigned_pickups_list.sort(key=lambda p: float(p.latitude) if p.latitude else 999.0)
+    
     completed_pickups = PickupRequest.objects.filter(assigned_worker=worker, status='Completed').order_by('-created_at')[:10]
     
     return render(request, 'worker/dashboard.html', {
         'worker': worker,
         'pending_pickups': pending_pickups,
-        'assigned_pickups': assigned_pickups,
+        'assigned_pickups': assigned_pickups_list,
         'completed_pickups': completed_pickups
     })
 

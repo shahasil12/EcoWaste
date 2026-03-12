@@ -11,6 +11,9 @@ urlpatterns = [
     path('citizen_report/',views.citizen_report,name='citizen_report'),
     path('citizen/logout/', views.citizen_logout, name='citizen_logout'),
     path('citizen/profile/', views.citizen_profile, name='citizen_profile'),
+    path('citizen/map/', views.citizen_map, name='citizen_map'),
+    path('citizen/rewards/', views.citizen_rewards, name='citizen_rewards'),
+    path('api/sorting-guide/', views.waste_sorting_api, name='waste_sorting_api'),
     path('company_dashboard/<int:company_id>/', views.company_dashboard, name='company_dashboard'),
     path('company_login/', views.company_login, name='company_login'),
     path('company/resolve_report/<int:report_id>/', views.company_resolve_report, name='company_resolve_report'),
@@ -29,4 +32,5 @@ urlpatterns = [
     path('citizen/recycling-centers/', views.recycling_centers, name='recycling_centers'),
     path('recycling-centers-json/', views.recycling_centers_json, name='recycling_centers_json'),
     path('staff/analytics/', views.admin_analytics, name='admin_analytics'),
+    path('bin/report-full/<int:bin_id>/', views.report_bin_full, name='report_bin_full'),
 ]   

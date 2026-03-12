@@ -200,21 +200,10 @@
         .status-pill {
             padding: 3px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;
         }
+        /* STATUS BADGES */
         .status-pill.pending { background: rgba(245,158,11,0.15); color: var(--orange); }
         .status-pill.resolved { background: rgba(16,185,129,0.15); color: var(--green); }
         .status-pill.in-progress { background: rgba(59,130,246,0.15); color: var(--blue); }
-
-        /* FACT BANNER */
-        .fact-banner {
-            background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(20,184,166,0.08));
-            border: 1px solid rgba(16,185,129,0.25);
-            border-radius: 16px; padding: 1.5rem;
-            margin-bottom: 2rem;
-            display: flex; align-items: center; gap: 1rem;
-        }
-        .fact-icon { font-size: 2rem; flex-shrink: 0; }
-        .fact-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--green); font-weight: 700; margin-bottom: 4px; }
-        #fact-text { font-size: 0.95rem; color: var(--text); font-weight: 500; transition: opacity 0.3s; }
 
         /* EMPTY STATE */
         .empty-state { text-align: center; padding: 2rem 1rem; color: var(--text2); }
@@ -338,13 +327,7 @@
             </div>
 
             <!-- DID YOU KNOW BANNER -->
-            <div class="fact-banner">
-                <div class="fact-icon">🌿</div>
-                <div>
-                    <div class="fact-label">Did You Know?</div>
-                    <div id="fact-text">🗑️ An average person produces 4.4 pounds of waste per day.</div>
-                </div>
-            </div>
+            {% include "fact_banner.html" %}
 
             <!-- GRID: QUICK ACTIONS + RECENT REPORTS -->
             <div class="sections-grid">
@@ -381,6 +364,28 @@
                     </div>
                 </div>
 
+                <!-- WASTE SORTING GUIDE -->
+                <div class="card border-0 shadow-sm mt-4 mb-4" style="border-radius: 16px; background: var(--card);">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3"><i class="fas fa-search"></i> Waste Sorting Guide</h5>
+                        <p class="text-sm text-gray-400 mb-3" style="color: var(--text2);">Not sure where your waste goes? Search to find out!</p>
+                        <div class="input-group mb-3">
+                            <input type="text" id="wasteSearchInput" class="form-control" placeholder="E.g., pizza box, battery, plastic bottle" style="background: var(--bg3); border: 1px solid var(--border); color: var(--text);" onkeyup="debounceSearch()">
+                            <button class="btn btn-success" type="button" onclick="searchWaste()"><i class="fas fa-search"></i></button>
+                        </div>
+                        
+                        <!-- Interactive badages for quick search -->
+                        <div class="mb-3 d-flex flex-wrap gap-2">
+                            <span class="badge bg-secondary" style="cursor: pointer; padding: 6px 10px;" onclick="quickSearch('pizza box')">🍕 Pizza Box</span>
+                            <span class="badge bg-secondary" style="cursor: pointer; padding: 6px 10px;" onclick="quickSearch('battery')">🔋 Battery</span>
+                            <span class="badge bg-secondary" style="cursor: pointer; padding: 6px 10px;" onclick="quickSearch('plastic bottle')">🧴 Plastic Bottle</span>
+                            <span class="badge bg-secondary" style="cursor: pointer; padding: 6px 10px;" onclick="quickSearch('apple core')">🍎 Apple Core</span>
+                        </div>
+                        
+                        <div id="wasteSearchResults" class="mt-3"></div>
+                    </div>
+                </div>
+
                 <!-- RECENT REPORTS -->
                 <div class="reports-card">
                     <div class="card-header">
@@ -412,25 +417,71 @@
     </div>
 
     <script>
-        const facts = [
-            "🗑️ An average person produces 4.4 pounds of waste per day.",
-            "♻️ Recycling one aluminum can saves enough energy to run a TV for 3 hours.",
-            "🌍 Over 1.3 billion tons of food is wasted globally every year.",
-            "📦 91% of plastic isn't recycled — it ends up in landfills or the ocean.",
-            "🌱 Composting reduces household waste by over 30%.",
-            "💧 It takes 2,400 gallons of water to produce 1 pound of meat.",
-            "🌊 8 million metric tons of plastics enter our oceans every year."
-        ];
-        let index = 0;
-        const factEl = document.getElementById("fact-text");
-        setInterval(() => {
-            factEl.style.opacity = '0';
-            setTimeout(() => {
-                index = (index + 1) % facts.length;
-                factEl.textContent = facts[index];
-                factEl.style.opacity = '1';
-            }, 300);
-        }, 5000);
+        let typingTimer;
+        const doneTypingInterval = 300; 
+        
+        function debounceSearch() {
+            clearTimeout(typingTimer);
+            if (document.getElementById('wasteSearchInput').value) {
+                typingTimer = setTimeout(searchWaste, doneTypingInterval);
+            } else {
+                document.getElementById('wasteSearchResults').innerHTML = '';
+            }
+        }
+
+        function quickSearch(item) {
+            const input = document.getElementById('wasteSearchInput');
+            input.value = item;
+            searchWaste();
+        }
+
+        function searchWaste() {
+            const query = document.getElementById('wasteSearchInput').value.trim();
+            const resultsContainer = document.getElementById('wasteSearchResults');
+            
+            if (!query) {
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            resultsContainer.innerHTML = '<div class="text-center text-muted"><i class="fas fa-spinner fa-spin"></i> Searching...</div>';
+
+            fetch(`/api/sorting-guide/?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.results && data.results.length > 0) {
+                        let html = '<div class="list-group">';
+                        data.results.forEach(item => {
+                            let badgeClass = 'bg-secondary';
+                            if(item.category === 'Recycling' || item.category === 'Paper' || item.category === 'Plastic' || item.category === 'Glass' || item.category === 'Metal') badgeClass = 'bg-primary';
+                            if(item.category === 'Organic') badgeClass = 'bg-success';
+                            if(item.category === 'E-waste' || item.category === 'Hazardous') badgeClass = 'bg-danger';
+
+                            html += `
+                                <div class="list-group-item" style="background: var(--bg3); border-color: var(--border); color: var(--text);">
+                                    <h6 class="mb-1">${item.item} <span class="badge ${badgeClass} float-end">${item.category}</span></h6>
+                                    <small class="text-gray-400" style="color: var(--text2);">${item.description}</small>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        resultsContainer.innerHTML = html;
+                    } else {
+                        resultsContainer.innerHTML = '<div class="alert alert-warning p-2" style="background: rgba(245,158,11,0.15); color: var(--orange); border:none;"><i class="fas fa-exclamation-triangle"></i> Not found. Please try another term.</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching sorting guide:', error);
+                    resultsContainer.innerHTML = '<div class="text-danger">Failed to load results.</div>';
+                });
+        }
+        
+        // Allow pressing Enter to search
+        document.getElementById('wasteSearchInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                searchWaste();
+            }
+        });
     </script>
 </body>
 </html>

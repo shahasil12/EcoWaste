@@ -1,9 +1,11 @@
 const FAQS = {
-    'reward': "Earn reward points by depositing sorted waste in our smart bins. Points can be redeemed for eco-friendly products!",
-    'location': "Use the 'Find Bins Near Me' button or map to see your closest recycle bins.",
-    'types': "We support Plastic, Paper, Metal, E-waste, and Organic waste. Check bin types in the 'Bin Locations' section.",
-    'report': "To report waste, click the 'Report Waste' button and fill out the form with location details.",
-    'full': "If a bin is marked as 'Full', please use another bin nearby or report it for priority servicing.",
+    'reward': "Earn reward points (10 for reporting waste, 20 for pickups) by disposing sorted waste. Points can be redeemed for eco-friendly products!",
+    'location': "Use the 'Find Bins Near Me' button or the map in the 'Bin Locations' section to see your closest recycle bins.",
+    'types': "We support Plastic, Paper, Metal, E-waste, and Organic waste. Different bins are color-coded for each type.",
+    'report': "To report waste, log in as a citizen, click 'Report Waste', and mark the location on the map.",
+    'full': "If a bin is marked as 'Full', please use another bin nearby. Our smart sensors will notify the collection company!",
+    'pickup': "You can request a door-to-door waste pickup from your preferred company through your dashboard.",
+    'points': "Your total points are displayed on your Citizen Dashboard. You can see how many you've earned from reports and pickups.",
 };
 
 function scrollToBinMap() {
@@ -15,26 +17,56 @@ function scrollToBinMap() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    // FAQ Assistant
-    let faqForm = document.getElementById('faq-form');
-    if (faqForm) {
-        faqForm.onsubmit = function(e) {
-            e.preventDefault();
-            const q = document.getElementById('faq-input').value.trim();
-            if (!q) return;
-            let chat = document.getElementById('faq-chat');
-            chat.innerHTML += `<div><b>You:</b> ${q}</div>`;
-            let answer = "Sorry, I don't understand that question! Try keywords like reward, location, types, report, full.";
-            for (const key in FAQS) {
-                if (q.toLowerCase().includes(key)) {
-                    answer = FAQS[key]; break;
-                }
-            }
-            chat.innerHTML += `<div><b>EcoWasteBot:</b> ${answer}</div>`;
-            chat.scrollTop = chat.scrollHeight;
-            document.getElementById('faq-input').value = '';
-        }
-    }
+    // FAQ Assistant
+    let faqForm = document.getElementById('faq-form');
+    if (faqForm) {
+        faqForm.onsubmit = function(e) {
+            e.preventDefault();
+            const q = document.getElementById('faq-input').value.trim();
+            if (!q) return;
+
+            let chat = document.getElementById('faq-chat');
+            let typing = document.getElementById('ai-typing');
+
+            // Add user message
+            chat.innerHTML += `<div class="mb-2 text-end"><span class="bg-primary text-white p-2 rounded-3 d-inline-block small" style="max-width:80%">${q}</span></div>`;
+            chat.scrollTop = chat.scrollHeight;
+            document.getElementById('faq-input').value = '';
+
+            // Show typing indicator
+            typing.classList.remove('d-none');
+
+            setTimeout(() => {
+                let answer = "I'm not exactly sure about that. Try asking about points, bins, types, or reports!";
+                for (const key in FAQS) {
+                    if (q.toLowerCase().includes(key)) {
+                        answer = FAQS[key];
+                        break;
+                    }
+                }
+
+                typing.classList.add('d-none');
+                chat.innerHTML += `<div class="mb-2"><span class="bg-light p-2 rounded-3 d-inline-block border small" style="max-width:80%"><b>EcoBot:</b> ${answer}</span></div>`;
+                chat.scrollTop = chat.scrollHeight;
+            }, 800);
+        }
+    }
+
+    window.clearChat = function() {
+        let chat = document.getElementById('faq-chat');
+        if (chat) chat.innerHTML = '<div class="text-muted small text-center my-3">Chat cleared</div>';
+    }
+
+    window.toggleAssistant = function() {
+        const card = document.getElementById('assistantCard');
+        if (card) {
+            card.classList.toggle('active');
+            let chat = document.getElementById('faq-chat');
+            if (card.classList.contains('active') && (chat.innerHTML.trim() === '' || chat.innerHTML.includes('Check bin types'))) {
+                 chat.innerHTML = `<div class="mb-2"><span class="bg-light p-2 rounded-3 d-inline-block border small" style="max-width:80%"><b>EcoBot:</b> Hello! I'm your EcoWaste assistant. How can I help you today? 🌱</span></div>`;
+            }
+        }
+    }
 
     // ---- Fetch and show nearby bins and stats on LOAD (NOT the map) ----
     if (typeof BIN_JSON_URL !== "undefined") {
@@ -49,24 +81,30 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                       let html = '';
 bins.forEach(bin => {
-    // Pick badge color for status
     let statusColor = bin.status == 'Full' ? 'warning' : 'success';
     html += `
-    <div class="card mb-3 border-${statusColor} shadow-sm">
-        <div class="card-body py-2">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h6 class="mb-0 text-${statusColor}">
-                        <i class="fas fa-map-marker-alt me-1"></i>${bin.name}
+    <div class="card bin-card-premium mb-3 border-${statusColor} shadow-sm px-2">
+        <div class="card-body py-3">
+            <div class="d-flex justify-content-between align-items-start">
+                <div class="flex-grow-1">
+                    <h6 class="mb-1 fw-bold text-dark">
+                        <i class="fas fa-map-marker-alt me-2 text-${statusColor}"></i>${bin.name}
                     </h6>
-                    <small class="text-muted">${bin.address}</small>
+                    <div class="text-muted small mb-2" style="font-size: 0.8rem;">
+                        <i class="fas fa-location-arrow me-1"></i>${bin.address}
+                    </div>
+                    <div class="d-flex flex-wrap gap-1">
+                        ${bin.types.split(',').map(t =>
+                            `<span class="badge bg-light text-dark border bin-type-tag">${t.trim()}</span>`
+                        ).join('')}
+                    </div>
                 </div>
-                <span class="badge bg-${statusColor}">${bin.status}</span>
-            </div>
-            <div class="mt-2">
-                ${bin.types.split(',').map(t =>
-                    `<span class="badge bg-secondary me-1">${t.trim()}</span>`
-                ).join('')}
+                <div class="d-flex flex-column align-items-end gap-2">
+                    <span class="badge bg-${statusColor} rounded-pill px-3" style="font-size: 0.65rem;">${bin.status}</span>
+                    ${bin.status === 'Available' ? 
+                        `<button class="btn btn-outline-warning btn-sm py-0 px-2" style="font-size: 0.65rem;" onclick="reportBinFull(${bin.id})">Report Full</button>` 
+                        : ''}
+                </div>
             </div>
         </div>
     </div>
@@ -107,14 +145,22 @@ container.innerHTML = html;
                   attribution: '&copy; OpenStreetMap contributors'
               }).addTo(map);
               bins.forEach(bin => {
-                  L.marker([bin.latitude, bin.longitude]).addTo(map)
-                    .bindPopup(
-                      `<strong>${bin.name}</strong><br>
-                      ${bin.address}<br>
-                      Status: <span class="badge bg-${bin.status == 'Full' ? 'warning' : 'success'}">${bin.status}</span><br>
-                      Types: ${bin.types}`
-                    );
-              });
+    let statusColor = bin.status == 'Full' ? 'warning' : 'success';
+    let popupContent = `
+        <div class="p-2">
+            <strong>${bin.name}</strong><br>
+            <small class="text-muted d-block mb-2">${bin.address}</small>
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="badge bg-${statusColor}">${bin.status}</span>
+                ${bin.status === 'Available' ? 
+                    `<button class="btn btn-warning btn-sm py-1 px-2" style="font-size: 0.7rem;" onclick="reportBinFull(${bin.id})">Report Full</button>` 
+                    : ''}
+            </div>
+        </div>
+    `;
+    L.marker([bin.latitude, bin.longitude]).addTo(map)
+        .bindPopup(popupContent);
+});
               mapDiv.setAttribute('data-loaded', 'true');
           })
           .catch(() => {
@@ -140,16 +186,48 @@ container.innerHTML = html;
     window.selectUserType = function(userType) {
         loginAs(userType);
     }
+    // CSRF helper
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    window.reportBinFull = function(binId) {
+        if (!confirm("Are you sure you want to report this bin as full? This helps our collection team!🌱")) return;
+
+        fetch(`${REPORT_BIN_URL}${binId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(async response => {
+            const data = await response.json();
+            if (response.ok) {
+                alert("✅ " + data.message);
+                location.reload(); 
+            } else {
+                alert("❌ " + (data.message || "Failed to submit report. Please login as a citizen."));
+            }
+        })
+        .catch(err => {
+            alert("❌ Please login as a citizen to report bins!");
+        });
+    }
 });
 
-document.addEventListener('DOMContentLoaded', function() {
-    let chat = document.getElementById('faq-chat');
-    if (chat) {
-        chat.innerHTML += `<div class="text-success small"><b>EcoWasteBot:</b> Please ask any questions if you have a doubt.</div>`;
-    }
-    let faqForm = document.getElementById('faq-form');
-  
-});
 
 function company() {
   

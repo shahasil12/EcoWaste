@@ -1,0 +1,49 @@
+<style>
+    .global-fact-banner {
+        background: linear-gradient(135deg, rgba(16,185,129,0.12), rgba(20,184,166,0.08));
+        border: 1px solid rgba(16,185,129,0.25);
+        border-radius: 16px; 
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex; 
+        align-items: center; 
+        gap: 1rem;
+    }
+    .global-fact-icon { font-size: 2rem; flex-shrink: 0; }
+    .global-fact-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: #10b981; font-weight: 700; margin-bottom: 4px; }
+    .global-fact-text { font-size: 1rem; font-weight: 500; transition: opacity 0.3s; margin: 0; }
+</style>
+<div class="global-fact-banner shadow-sm">
+    <div class="global-fact-icon">🌿</div>
+    <div>
+        <div class="global-fact-label">Did You Know?</div>
+        <p id="global-fact-text-el" class="global-fact-text">🗑️ An average person produces 4.4 pounds of waste per day.</p>
+    </div>
+</div>
+<script>
+    (function() {
+        const factsList = [
+            "🗑️ An average person produces 4.4 pounds of waste per day.",
+            "♻️ Recycling one aluminum can saves enough energy to run a TV for 3 hours.",
+            "🌍 Over 1.3 billion tons of food is wasted globally every year.",
+            "📦 91% of plastic isn't recycled — it ends up in landfills or the ocean.",
+            "🌱 Composting reduces household waste by over 30%.",
+            "💧 It takes 2,400 gallons of water to produce 1 pound of meat.",
+            "🌊 8 million metric tons of plastics enter our oceans every year."
+        ];
+        let factIdx = 0;
+        document.addEventListener("DOMContentLoaded", function() {
+            const el = document.getElementById("global-fact-text-el");
+            if(el) {
+                setInterval(() => {
+                    el.style.opacity = '0';
+                    setTimeout(() => {
+                        factIdx = (factIdx + 1) % factsList.length;
+                        el.textContent = factsList[factIdx];
+                        el.style.opacity = '1';
+                    }, 300);
+                }, 5000);
+            }
+        });
+    })();
+</script>
