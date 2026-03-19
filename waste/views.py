@@ -13,6 +13,12 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from .models import Bin, BinReport
 
+
+
+def ping(request):
+    return HttpResponse("OK")
+
+
 def home(request):
     top_citizens = Citizen.objects.order_by('-points')[:5]
     total_bins = Bin.objects.count()
