@@ -17,17 +17,39 @@ from .models import Bin, BinReport
 
 
 def ping(request):
-    return HttpResponse("OK")
+    try:
+        Bin.objects.first()
+        return HttpResponse("OK DB")
+    except:
+        return HttpResponse("DB waking", status=200)
 
+
+
+
+import time
+from django.shortcuts import render
+from .models import Citizen, Bin, Report
 
 def home(request):
-    top_citizens = Citizen.objects.order_by('-points')[:5]
-    total_bins = Bin.objects.count()
-    full_bins = Bin.objects.filter(status='Full').count()
-    available_bins = Bin.objects.filter(status='Available').count()
-    total_resolved = Report.objects.filter(status='Resolved').count()
-    # Mock conversions: Let's assume on average each resolved report handles 5kg of waste
-    # and 50kg corresponds to roughly 1 tree saved (just for gamification stats)
+    for i in range(2):  # try 2 times
+        try:
+            top_citizens = Citizen.objects.order_by('-points')[:5]
+            total_bins = Bin.objects.count()
+            full_bins = Bin.objects.filter(status='Full').count()
+            available_bins = Bin.objects.filter(status='Available').count()
+            total_resolved = Report.objects.filter(status='Resolved').count()
+
+            break  # success → exit loop
+
+        except Exception as e:
+            print("DB waking up...", e)
+            time.sleep(1)  # wait 1 sec and retry
+
+    # fallback (if still fails)
+    else:
+        top_citizens = []
+        total_bins = full_bins = available_bins = total_resolved = 0
+
     waste_collected_kg = total_resolved * 5
     trees_saved = waste_collected_kg // 50
 
