@@ -33,4 +33,5 @@ urlpatterns = [
     path('recycling-centers-json/', views.recycling_centers_json, name='recycling_centers_json'),
     path('staff/analytics/', views.admin_analytics, name='admin_analytics'),
     path('bin/report-full/<int:bin_id>/', views.report_bin_full, name='report_bin_full'),
+    path('ping/', views.ping)
 ]   
