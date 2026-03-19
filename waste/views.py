@@ -183,6 +183,29 @@ def citizen_login(request):
         'form': UserForm()
     })
 
+import json
+from django.views.decorators.csrf import csrf_exempt
+
+@csrf_exempt
+def api_citizen_login(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            
+            citizen = Citizen.objects.get(username=username)
+            if check_password(password, citizen.password):
+                return JsonResponse({'status': 'success', 'citizen_id': citizen.id, 'username': citizen.username})
+            else:
+                return JsonResponse({'status': 'error', 'message': 'Incorrect password'}, status=401)
+        except Citizen.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Username not found'}, status=404)
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
+
 
 @citizen_required
 def citizen_map(request):

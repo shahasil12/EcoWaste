@@ -1,13 +1,13 @@
-Traceback (most recent call last):
-  File "/home/shahasil/Downloads/ecogreen/manage.py", line 11, in main
-    from django.core.management import execute_from_command_line
-ModuleNotFoundError: No module named 'django'
-
-The above exception was the direct cause of the following exception:
-
-Traceback (most recent call last):
-  File "/home/shahasil/Downloads/ecogreen/manage.py", line 22, in <module>
-    main()
-  File "/home/shahasil/Downloads/ecogreen/manage.py", line 13, in main
-    raise ImportError(
-ImportError: Couldn't import Django. Are you sure it's installed and available on your PYTHONPATH environment variable? Did you forget to activate a virtual environment?
+Watching for file changes with StatReloader
+[17/Mar/2026 07:18:11] "GET / HTTP/1.1" 200 26224
+[17/Mar/2026 07:18:11] "GET /static/css/styles.css HTTP/1.1" 200 6255
+[17/Mar/2026 07:18:11] "GET /static/js/script.js HTTP/1.1" 200 10955
+[17/Mar/2026 07:18:11] "GET /bins-json/ HTTP/1.1" 200 630
+Not Found: /favicon.ico
+[17/Mar/2026 07:18:11] "GET /favicon.ico HTTP/1.1" 404 11235
+[17/Mar/2026 07:18:56] "GET /citizen HTTP/1.1" 200 3749
+[17/Mar/2026 07:18:56] "GET /static/css/citizen_auth.css HTTP/1.1" 200 2639
+[17/Mar/2026 07:18:56] "GET /static/js/citizen_auth.js HTTP/1.1" 200 3311
+[17/Mar/2026 07:18:58] "GET /citizen_home HTTP/1.1" 200 26575
+[17/Mar/2026 07:19:05] "GET /citizen/logout/ HTTP/1.1" 302 0
+[17/Mar/2026 07:19:05] "GET /citizen_login HTTP/1.1" 200 3062

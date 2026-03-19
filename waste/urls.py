@@ -13,6 +13,7 @@ urlpatterns = [
     path('citizen/profile/', views.citizen_profile, name='citizen_profile'),
     path('citizen/map/', views.citizen_map, name='citizen_map'),
     path('citizen/rewards/', views.citizen_rewards, name='citizen_rewards'),
+    path('api/citizen/login/', views.api_citizen_login, name='api_citizen_login'),
     path('api/sorting-guide/', views.waste_sorting_api, name='waste_sorting_api'),
     path('company_dashboard/<int:company_id>/', views.company_dashboard, name='company_dashboard'),
     path('company_login/', views.company_login, name='company_login'),
