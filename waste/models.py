@@ -11,6 +11,10 @@ class Citizen(models.Model):
     def __str__(self):
         return self.username
 
+    @property
+    def is_authenticated(self):
+        return True
+
 class Company(models.Model):
     name = models.CharField(max_length=100)
     password = models.CharField(max_length=100,null=True)
