@@ -7,3 +7,5 @@ gunicorn==25.1.0
 Pillow
 dj-database-url
 supabase
+django-storages
+boto3
