@@ -10,6 +10,7 @@ from .views import (
     RecyclingCenterListView,
     PickupListCreateView,
     LeaderboardView,
+    StorageCleanupView,
 )
 
 urlpatterns = [
@@ -32,4 +33,8 @@ urlpatterns = [
     path('bins/',                BinListView.as_view(),              name='api_bins'),
     path('recycling-centers/',   RecyclingCenterListView.as_view(), name='api_recycling_centers'),
     path('leaderboard/',         LeaderboardView.as_view(),         name='api_leaderboard'),
+
+    # ── Admin / Cron ──────────────────────────────────────────────────────────
+    path('admin/cleanup-storage/', StorageCleanupView.as_view(), name='api_cleanup_storage'),
 ]
+

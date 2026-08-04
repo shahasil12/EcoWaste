@@ -5,12 +5,14 @@ All endpoints return JSON. Authentication uses JWT Bearer tokens.
 The Citizen model (not Django auth.User) is the identity source.
 """
 from django.contrib.auth.hashers import make_password, check_password
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+import os
 
 from waste.models import Citizen, Report, Bin, RecyclingCenter, PickupRequest
 from .serializers import (
@@ -269,3 +271,33 @@ class LeaderboardView(APIView):
         top_citizens = Citizen.objects.order_by('-points')[:10]
         serializer = CitizenSerializer(top_citizens, many=True)
         return Response(serializer.data)
+
+
+# ─── Storage Cleanup (Cron Endpoint) ────────────────────────────────────────────────
+
+class StorageCleanupView(APIView):
+    """
+    POST /api/v1/admin/cleanup-storage/
+    Protected by a secret key in the Authorization header.
+    Called by Vercel Cron daily to auto-delete old images when > 50MB.
+
+    Set CLEANUP_SECRET env var in Vercel. The cron sends:
+      Authorization: Bearer <CLEANUP_SECRET>
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        # Simple secret-key auth for cron — no JWT needed
+        secret = os.environ.get('CLEANUP_SECRET', '')
+        auth_header = request.headers.get('Authorization', '')
+        provided = auth_header.replace('Bearer ', '').strip()
+
+        if not secret or provided != secret:
+            return Response({'error': 'Unauthorized'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            from waste.management.commands.cleanup_storage import run_cleanup
+            stats = run_cleanup(dry_run=False, verbose=False)
+            return Response(stats, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
