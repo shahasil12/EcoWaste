@@ -9,3 +9,6 @@ dj-database-url
 supabase
 django-storages
 boto3
+djangorestframework
+djangorestframework-simplejwt
+django-cors-headers
