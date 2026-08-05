@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     RegisterView,
     LoginView,
+    UnifiedLoginView,
     CompanyLoginView,
     CompanyRegisterView,
     TokenRefreshView,
@@ -33,6 +34,7 @@ urlpatterns = [
     # ── Auth ──────────────────────────────────────────────────────────────────
     path('auth/register/',         RegisterView.as_view(),        name='api_register'),
     path('auth/login/',            LoginView.as_view(),           name='api_login'),
+    path('auth/unified-login/',    UnifiedLoginView.as_view(),    name='api_unified_login'),
     path('auth/company-login/',    CompanyLoginView.as_view(),    name='api_company_login'),
     path('auth/company-register/', CompanyRegisterView.as_view(), name='api_company_register'),
     path('auth/token/refresh/',    TokenRefreshView.as_view(),    name='api_token_refresh'),

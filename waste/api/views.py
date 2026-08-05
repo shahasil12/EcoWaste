@@ -184,6 +184,74 @@ class CompanyLoginView(APIView):
         )
 
 
+class UnifiedLoginView(APIView):
+    """
+    POST /api/v1/auth/unified-login/
+    Body: { username, password }
+    Returns: { access, refresh, role, ...user_data }
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username', '').strip()
+        password = request.data.get('password', '')
+
+        if not username or not password:
+            return Response(
+                {'error': 'username and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 1. Try Admin (Django standard User)
+        user = authenticate(username=username, password=password)
+        if user is not None:
+            tokens = get_tokens_for_admin(user)
+            return Response(
+                {
+                    'message': 'Admin login successful.',
+                    'role': 'admin',
+                    **tokens,
+                },
+                status=status.HTTP_200_OK,
+            )
+
+        # 2. Try Citizen
+        try:
+            citizen = Citizen.objects.get(username=username)
+            if check_password(password, citizen.password):
+                tokens = get_tokens_for_citizen(citizen)
+                return Response(
+                    {
+                        'message': 'Citizen login successful.',
+                        'citizen': CitizenSerializer(citizen).data,
+                        'role': 'citizen',
+                        **tokens,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+        except Citizen.DoesNotExist:
+            pass
+
+        # 3. Try Company (assuming 'name' matches 'username' input)
+        try:
+            company = Company.objects.get(name=username)
+            if check_password(password, company.password):
+                tokens = get_tokens_for_company(company)
+                return Response(
+                    {
+                        'message': 'Company login successful.',
+                        'company': CompanySerializer(company).data,
+                        'role': 'company',
+                        **tokens,
+                    },
+                    status=status.HTTP_200_OK,
+                )
+        except Company.DoesNotExist:
+            pass
+
+        return Response({'error': 'Invalid credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
 class CompanyRegisterView(APIView):
     """
     POST /api/v1/auth/company-register/
