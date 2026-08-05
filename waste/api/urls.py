@@ -25,6 +25,8 @@ from .views import (
     CompanyAssignedReportsView,
     CompanyReportDetailView,
     CompanyPickupRequestDetailView,
+    AdminBinListView,
+    AdminBinDetailView,
 )
 
 urlpatterns = [
@@ -49,6 +51,8 @@ urlpatterns = [
     path('admin/companies/<int:pk>/', AdminCompanyDetailView.as_view(), name='api_admin_company_detail'),
     path('admin/reports/', AdminReportListView.as_view(), name='api_admin_reports'),
     path('admin/reports/<int:pk>/', AdminReportDetailView.as_view(), name='api_admin_report_detail'),
+    path('admin/bins/', AdminBinListView.as_view(), name='api_admin_bins'),
+    path('admin/bins/<int:pk>/', AdminBinDetailView.as_view(), name='api_admin_bin_detail'),
 
     # ── Citizen ───────────────────────────────────────────────────────────────
     path('citizen/profile/',     CitizenProfileView.as_view(), name='api_citizen_profile'),

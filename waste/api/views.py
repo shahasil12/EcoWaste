@@ -520,6 +520,44 @@ class AdminReportDetailView(APIView):
         report.save()
         return Response(ReportSerializer(report).data)
 
+class AdminBinListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def get(self, request):
+        bins = Bin.objects.all().order_by('-id')
+        return Response(BinSerializer(bins, many=True).data)
+
+    def post(self, request):
+        serializer = BinSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class AdminBinDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def delete(self, request, pk):
+        try:
+            bin_obj = Bin.objects.get(pk=pk)
+            bin_obj.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Bin.DoesNotExist:
+            return Response({'error': 'Bin not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk):
+        try:
+            bin_obj = Bin.objects.get(pk=pk)
+        except Bin.DoesNotExist:
+            return Response({'error': 'Bin not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+        serializer = BinSerializer(bin_obj, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 # ─── Company Portal ───────────────────────────────────────────────────────────
 
 from .permissions import IsCompanyRole
