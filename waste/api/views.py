@@ -5,6 +5,7 @@ All endpoints return JSON. Authentication uses JWT Bearer tokens.
 The Citizen model (not Django auth.User) is the identity source.
 """
 from django.contrib.auth.hashers import make_password, check_password
+from django.contrib.auth import authenticate
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -53,6 +54,19 @@ def get_tokens_for_company(company):
     refresh['company_id'] = company.id
     refresh['name'] = company.name
     refresh['role'] = 'company'
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+def get_tokens_for_admin(user):
+    """
+    Generate a JWT refresh + access token pair for a Django Admin/Superuser.
+    """
+    refresh = RefreshToken()
+    refresh['user_id'] = user.id
+    refresh['username'] = user.username
+    refresh['role'] = 'admin'
     return {
         'refresh': str(refresh),
         'access': str(refresh.access_token),
@@ -200,6 +214,27 @@ class CompanyRegisterView(APIView):
         )
 
 
+class AdminLoginView(APIView):
+    """
+    POST /api/v1/admin/login/
+    Body: { username, password }
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        username = request.data.get('username')
+        password = request.data.get('password')
+        
+        user = authenticate(username=username, password=password)
+        if user is not None and user.is_superuser:
+            tokens = get_tokens_for_admin(user)
+            return Response({
+                'message': 'Admin login successful.',
+                'role': 'admin',
+                'username': user.username,
+                **tokens,
+            }, status=status.HTTP_200_OK)
+        return Response({'error': 'Invalid admin credentials.'}, status=status.HTTP_401_UNAUTHORIZED)
 
 
 class TokenRefreshView(APIView):
@@ -390,3 +425,115 @@ class StorageCleanupView(APIView):
             return Response(stats, status=status.HTTP_200_OK)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# ─── Admin Endpoints ──────────────────────────────────────────────────────────
+
+from .permissions import IsAdminRole
+
+class AdminCitizenListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def get(self, request):
+        citizens = Citizen.objects.all().order_by('-id')
+        return Response(CitizenSerializer(citizens, many=True).data)
+
+class AdminCitizenDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def delete(self, request, pk):
+        try:
+            citizen = Citizen.objects.get(pk=pk)
+            citizen.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Citizen.DoesNotExist:
+            return Response({'error': 'Citizen not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class AdminCompanyListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def get(self, request):
+        companies = Company.objects.all().order_by('-id')
+        return Response(CompanySerializer(companies, many=True).data)
+
+class AdminCompanyDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def delete(self, request, pk):
+        try:
+            company = Company.objects.get(pk=pk)
+            company.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Company.DoesNotExist:
+            return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class AdminReportListView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def get(self, request):
+        reports = Report.objects.all().order_by('-id')
+        return Response(ReportSerializer(reports, many=True).data)
+
+class AdminReportDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminRole]
+
+    def delete(self, request, pk):
+        try:
+            report = Report.objects.get(pk=pk)
+            report.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Report.DoesNotExist:
+            return Response({'error': 'Report not found'}, status=status.HTTP_404_NOT_FOUND)
+
+# ─── Company Portal ───────────────────────────────────────────────────────────
+
+from .permissions import IsCompanyRole
+
+class CompanyAssignedReportsView(APIView):
+    permission_classes = [IsAuthenticated, IsCompanyRole]
+
+    def get(self, request):
+        company_id = request.auth.get('company_id')
+        reports = Report.objects.filter(assigned_company_id=company_id).order_by('-created_at')
+        return Response(ReportSerializer(reports, many=True).data)
+
+class CompanyReportDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsCompanyRole]
+
+    def patch(self, request, pk):
+        company_id = request.auth.get('company_id')
+        try:
+            report = Report.objects.get(pk=pk, assigned_company_id=company_id)
+        except Report.DoesNotExist:
+            return Response({'error': 'Report not found or not assigned to you'}, status=status.HTTP_404_NOT_FOUND)
+        
+        status_val = request.data.get('status')
+        if status_val in dict(Report.STATUS_CHOICES).keys():
+            report.status = status_val
+            report.save()
+            return Response(ReportSerializer(report).data)
+        return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+
+class CompanyPickupRequestListView(APIView):
+    permission_classes = [IsAuthenticated, IsCompanyRole]
+
+    def get(self, request):
+        company_id = request.auth.get('company_id')
+        pickups = PickupRequest.objects.filter(preferred_company_id=company_id).order_by('-created_at')
+        return Response(PickupRequestSerializer(pickups, many=True).data)
+
+class CompanyPickupRequestDetailView(APIView):
+    permission_classes = [IsAuthenticated, IsCompanyRole]
+
+    def patch(self, request, pk):
+        company_id = request.auth.get('company_id')
+        try:
+            pickup = PickupRequest.objects.get(pk=pk, preferred_company_id=company_id)
+        except PickupRequest.DoesNotExist:
+            return Response({'error': 'Pickup request not found or not assigned to you'}, status=status.HTTP_404_NOT_FOUND)
+        
+        status_val = request.data.get('status')
+        if status_val in dict(PickupRequest.STATUS_CHOICES).keys():
+            pickup.status = status_val
+            pickup.save()
+            return Response(PickupRequestSerializer(pickup).data)
+        return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
