@@ -140,3 +140,15 @@ class CompanySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'address', 'contact_email']
         read_only_fields = ['id']
 
+
+class CompanyRegisterSerializer(serializers.Serializer):
+    name = serializers.CharField(max_length=100)
+    password = serializers.CharField(max_length=100, write_only=True)
+    address = serializers.CharField(max_length=200)
+    contact_email = serializers.EmailField()
+
+    def validate_name(self, value):
+        if Company.objects.filter(name=value).exists():
+            raise serializers.ValidationError('Company name already exists.')
+        return value
+

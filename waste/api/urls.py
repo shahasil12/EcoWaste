@@ -3,6 +3,7 @@ from .views import (
     RegisterView,
     LoginView,
     CompanyLoginView,
+    CompanyRegisterView,
     TokenRefreshView,
     CitizenProfileView,
     ReportListCreateView,
@@ -16,10 +17,11 @@ from .views import (
 
 urlpatterns = [
     # ── Auth ──────────────────────────────────────────────────────────────────
-    path('auth/register/',       RegisterView.as_view(),    name='api_register'),
-    path('auth/login/',          LoginView.as_view(),       name='api_login'),
-    path('auth/company-login/',  CompanyLoginView.as_view(),name='api_company_login'),
-    path('auth/token/refresh/',  TokenRefreshView.as_view(),name='api_token_refresh'),
+    path('auth/register/',         RegisterView.as_view(),        name='api_register'),
+    path('auth/login/',            LoginView.as_view(),           name='api_login'),
+    path('auth/company-login/',    CompanyLoginView.as_view(),    name='api_company_login'),
+    path('auth/company-register/', CompanyRegisterView.as_view(), name='api_company_register'),
+    path('auth/token/refresh/',    TokenRefreshView.as_view(),    name='api_token_refresh'),
 
     # ── Citizen ───────────────────────────────────────────────────────────────
     path('citizen/profile/',     CitizenProfileView.as_view(), name='api_citizen_profile'),

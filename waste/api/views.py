@@ -25,6 +25,7 @@ from .serializers import (
     PickupRequestSerializer,
     PickupRequestCreateSerializer,
     CompanySerializer,
+    CompanyRegisterSerializer,
 )
 
 
@@ -165,6 +166,39 @@ class CompanyLoginView(APIView):
             },
             status=status.HTTP_200_OK,
         )
+
+
+class CompanyRegisterView(APIView):
+    """
+    POST /api/v1/auth/company-register/
+    Body: { name, password, address, contact_email }
+    Returns: company profile + JWT tokens
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = CompanyRegisterSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        company = Company.objects.create(
+            name=data['name'],
+            password=make_password(data['password']),
+            address=data['address'],
+            contact_email=data['contact_email'],
+        )
+        tokens = get_tokens_for_company(company)
+        return Response(
+            {
+                'message': 'Registration successful.',
+                'company': CompanySerializer(company).data,
+                'role': 'company',
+                **tokens,
+            },
+            status=status.HTTP_201_CREATED,
+        )
+
 
 
 
