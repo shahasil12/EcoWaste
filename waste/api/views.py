@@ -344,6 +344,18 @@ class BinListView(APIView):
         serializer = BinSerializer(bins, many=True)
         return Response(serializer.data)
 
+class PublicCompanyListView(APIView):
+    """
+    GET /api/v1/companies/
+    Public. Returns all companies so citizens/admins can select them.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        companies = Company.objects.all()
+        serializer = CompanySerializer(companies, many=True)
+        return Response(serializer.data)
+
 
 # ─── Recycling Centers ────────────────────────────────────────────────────────
 
@@ -483,6 +495,30 @@ class AdminReportDetailView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Report.DoesNotExist:
             return Response({'error': 'Report not found'}, status=status.HTTP_404_NOT_FOUND)
+            
+    def patch(self, request, pk):
+        try:
+            report = Report.objects.get(pk=pk)
+        except Report.DoesNotExist:
+            return Response({'error': 'Report not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        company_id = request.data.get('assigned_company')
+        if company_id:
+            try:
+                company = Company.objects.get(pk=company_id)
+                report.assigned_company = company
+            except Company.DoesNotExist:
+                return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
+                
+        status_val = request.data.get('status')
+        if status_val:
+            if status_val in dict(Report.STATUS_CHOICES).keys():
+                report.status = status_val
+            else:
+                return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+                
+        report.save()
+        return Response(ReportSerializer(report).data)
 
 # ─── Company Portal ───────────────────────────────────────────────────────────
 

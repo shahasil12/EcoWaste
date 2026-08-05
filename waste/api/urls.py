@@ -9,6 +9,7 @@ from .views import (
     ReportListCreateView,
     ReportDetailView,
     BinListView,
+    PublicCompanyListView,
     RecyclingCenterListView,
     PickupListCreateView,
     CompanyPickupRequestListView,
@@ -61,6 +62,7 @@ urlpatterns = [
 
     # ── Public ────────────────────────────────────────────────────────────────
     path('bins/',                BinListView.as_view(),              name='api_bins'),
+    path('companies/',           PublicCompanyListView.as_view(),    name='api_public_companies'),
     path('recycling-centers/',   RecyclingCenterListView.as_view(), name='api_recycling_centers'),
     path('leaderboard/',         LeaderboardView.as_view(),         name='api_leaderboard'),
 
