@@ -27,6 +27,8 @@ from .serializers import (
     PickupRequestCreateSerializer,
     CompanySerializer,
     CompanyRegisterSerializer,
+    AdminCitizenUpdateSerializer,
+    AdminCompanyUpdateSerializer,
 )
 
 
@@ -449,6 +451,19 @@ class AdminCitizenListView(APIView):
         citizens = Citizen.objects.all().order_by('-id')
         return Response(CitizenSerializer(citizens, many=True).data)
 
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            citizen = Citizen.objects.create(
+                username=data['username'],
+                password=make_password(data['password']),
+                phone=data['phone'],
+                place=data['place'],
+            )
+            return Response(CitizenSerializer(citizen).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class AdminCitizenDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminRole]
 
@@ -460,12 +475,37 @@ class AdminCitizenDetailView(APIView):
         except Citizen.DoesNotExist:
             return Response({'error': 'Citizen not found'}, status=status.HTTP_404_NOT_FOUND)
 
+    def put(self, request, pk):
+        try:
+            citizen = Citizen.objects.get(pk=pk)
+        except Citizen.DoesNotExist:
+            return Response({'error': 'Citizen not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminCitizenUpdateSerializer(citizen, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 class AdminCompanyListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminRole]
 
     def get(self, request):
         companies = Company.objects.all().order_by('-id')
         return Response(CompanySerializer(companies, many=True).data)
+
+    def post(self, request):
+        serializer = CompanyRegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            company = Company.objects.create(
+                name=data['name'],
+                password=make_password(data['password']),
+                address=data['address'],
+                contact_email=data['contact_email'],
+            )
+            return Response(CompanySerializer(company).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminCompanyDetailView(APIView):
     permission_classes = [IsAuthenticated, IsAdminRole]
@@ -477,6 +517,18 @@ class AdminCompanyDetailView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Company.DoesNotExist:
             return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    def put(self, request, pk):
+        try:
+            company = Company.objects.get(pk=pk)
+        except Company.DoesNotExist:
+            return Response({'error': 'Company not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = AdminCompanyUpdateSerializer(company, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminReportListView(APIView):
     permission_classes = [IsAuthenticated, IsAdminRole]

@@ -152,3 +152,38 @@ class CompanyRegisterSerializer(serializers.Serializer):
             raise serializers.ValidationError('Company name already exists.')
         return value
 
+# ─── Admin Update Serializers ───────────────────────────────────────────────────
+
+class AdminCitizenUpdateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(max_length=128, write_only=True, required=False)
+
+    class Meta:
+        model = Citizen
+        fields = ['id', 'username', 'phone', 'place', 'points', 'password']
+        read_only_fields = ['id']
+
+    def update(self, instance, validated_data):
+        from django.contrib.auth.hashers import make_password
+        if 'password' in validated_data and validated_data['password']:
+            validated_data['password'] = make_password(validated_data['password'])
+        else:
+            validated_data.pop('password', None)
+        return super().update(instance, validated_data)
+
+class AdminCompanyUpdateSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(max_length=128, write_only=True, required=False)
+
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'address', 'contact_email', 'password']
+        read_only_fields = ['id']
+
+    def update(self, instance, validated_data):
+        from django.contrib.auth.hashers import make_password
+        if 'password' in validated_data and validated_data['password']:
+            validated_data['password'] = make_password(validated_data['password'])
+        else:
+            validated_data.pop('password', None)
+        return super().update(instance, validated_data)
+
+
