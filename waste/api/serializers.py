@@ -130,3 +130,13 @@ class PickupRequestCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = PickupRequest
         fields = ['waste_type', 'address', 'latitude', 'longitude', 'pickup_date', 'preferred_company']
+
+
+# ─── Company ──────────────────────────────────────────────────────────────────
+
+class CompanySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Company
+        fields = ['id', 'name', 'address', 'contact_email']
+        read_only_fields = ['id']
+

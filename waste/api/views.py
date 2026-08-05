@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 import os
 
-from waste.models import Citizen, Report, Bin, RecyclingCenter, PickupRequest
+from waste.models import Citizen, Report, Bin, RecyclingCenter, PickupRequest, Company
 from .serializers import (
     CitizenSerializer,
     RegisterSerializer,
@@ -24,6 +24,7 @@ from .serializers import (
     RecyclingCenterSerializer,
     PickupRequestSerializer,
     PickupRequestCreateSerializer,
+    CompanySerializer,
 )
 
 
@@ -37,6 +38,20 @@ def get_tokens_for_citizen(citizen):
     refresh = RefreshToken()
     refresh['citizen_id'] = citizen.id
     refresh['username'] = citizen.username
+    refresh['role'] = 'citizen'
+    return {
+        'refresh': str(refresh),
+        'access': str(refresh.access_token),
+    }
+
+def get_tokens_for_company(company):
+    """
+    Generate a JWT refresh + access token pair for a given Company instance.
+    """
+    refresh = RefreshToken()
+    refresh['company_id'] = company.id
+    refresh['name'] = company.name
+    refresh['role'] = 'company'
     return {
         'refresh': str(refresh),
         'access': str(refresh.access_token),
@@ -107,10 +122,50 @@ class LoginView(APIView):
             {
                 'message': 'Login successful.',
                 'citizen': CitizenSerializer(citizen).data,
+                'role': 'citizen',
                 **tokens,
             },
             status=status.HTTP_200_OK,
         )
+
+
+class CompanyLoginView(APIView):
+    """
+    POST /api/v1/auth/company-login/
+    Body: { name, password }
+    Returns: { access, refresh, company, role: 'company' }
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        name = request.data.get('name', '').strip()
+        password = request.data.get('password', '')
+
+        if not name or not password:
+            return Response(
+                {'error': 'name and password are required.'},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            company = Company.objects.get(name=name)
+        except Company.DoesNotExist:
+            return Response({'error': 'Company name not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not check_password(password, company.password):
+            return Response({'error': 'Incorrect password.'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        tokens = get_tokens_for_company(company)
+        return Response(
+            {
+                'message': 'Login successful.',
+                'company': CompanySerializer(company).data,
+                'role': 'company',
+                **tokens,
+            },
+            status=status.HTTP_200_OK,
+        )
+
 
 
 class TokenRefreshView(APIView):

@@ -2,6 +2,7 @@ from django.urls import path
 from .views import (
     RegisterView,
     LoginView,
+    CompanyLoginView,
     TokenRefreshView,
     CitizenProfileView,
     ReportListCreateView,
@@ -17,6 +18,7 @@ urlpatterns = [
     # ── Auth ──────────────────────────────────────────────────────────────────
     path('auth/register/',       RegisterView.as_view(),    name='api_register'),
     path('auth/login/',          LoginView.as_view(),       name='api_login'),
+    path('auth/company-login/',  CompanyLoginView.as_view(),name='api_company_login'),
     path('auth/token/refresh/',  TokenRefreshView.as_view(),name='api_token_refresh'),
 
     # ── Citizen ───────────────────────────────────────────────────────────────
